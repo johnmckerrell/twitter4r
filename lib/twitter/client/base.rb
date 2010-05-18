@@ -15,7 +15,7 @@ class Twitter::Client
     	connection = create_http_connection(service)
     	connection.start do |connection|
     		request = yield connection if block_given?
-    		request.basic_auth(@login, @password) if require_auth
+    		request.basic_auth(@login, @password) if require_auth && !@login.nil? && !@password.nil?
     		response = connection.request(request, body)
     		handle_rest_response(response)
     		response
@@ -63,6 +63,12 @@ class Twitter::Client
         conn.use_ssl = true
         conn.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
+     
+      # Add timeout from config, if applicable.
+      if @@config.timeout
+        conn.read_timeout = @@config.timeout
+      end
+
       conn
     end
 
