@@ -13,10 +13,9 @@ class Twitter::Client
   # To get a previous page you can provide options to this method.  For example,
   #  statuses = client.favorites(:page => 2)
   # The above one-liner will get the second page of favorites for the authenticated user.
-  def favorites(options = nil)
-    def uri_suffix(opts); opts && opts[:page] ? "?page=#{opts[:page]}" : ""; end
-    uri = '/favorites.json' + uri_suffix(options)
-    response = http_connect {|conn|	create_http_get_request(uri) }
+  def favorites(options = {})
+    params = {:page => options[:page] || 1}
+    response = http_get_request('/favorites.json', params)
     bless_models(Twitter::Status.unmarshal(response.body))
   end
 	
@@ -44,9 +43,9 @@ class Twitter::Client
     uri = "#{@@FAVORITES_URIS[action]}/#{value}.json"
     case action
     when :add
-      response = http_connect {|conn| create_http_post_request(uri) }
+      response = http_post_request(uri, nil)
     when :remove
-      response = http_connect {|conn| create_http_delete_request(uri) }
+      response = http_delete_request(uri)
     end
     bless_model(Twitter::Status.unmarshal(response.body))
   end

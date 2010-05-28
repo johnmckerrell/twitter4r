@@ -8,7 +8,7 @@ require('twitter')
 
 class Twitter::Client
   @@FEATURED_URIS = {
-    :users => 'http://twitter.com/statuses/featured.json'
+    :users => '/statuses/featured.json'
   }
   
   # Provides access to the Featured Twitter API.
@@ -18,7 +18,7 @@ class Twitter::Client
   # represent Twitter's featured users.
   def featured(type)
     uri = @@FEATURED_URIS[type]
-    response = http_connect {|conn| create_http_get_request(uri) }
+    response = http_get_request(uri)
     bless_models(Twitter::User.unmarshal(response.body))
   end
 end

@@ -20,7 +20,7 @@ class Twitter::Client
   def messages(action, options = {})
     raise ArgumentError, "Invalid messaging action: #{action}" unless [:sent, :received].member?(action)
     uri = @@MESSAGING_URIS[action]
-    response = http_connect {|conn|	create_http_get_request(uri, options) }
+    response = http_get_request(uri, options)
     bless_models(Twitter::Message.unmarshal(response.body))
   end
   
@@ -69,9 +69,9 @@ class Twitter::Client
     user = user.to_i if user and user.is_a?(Twitter::User)
     case action
     when :post
-      response = http_connect({:text => value, :user => user, :source => @@config.source}.to_http_str) {|conn| create_http_post_request(uri) }
+      response = http_post_request(uri, {:text => value, :user => user, :source => @@config.source})
     when :delete
-      response = http_connect {|conn| create_http_delete_request(uri, :id => value.to_i) }
+      response = http_delete_request(uri, :id => value.to_i)
     end
     message = Twitter::Message.unmarshal(response.body)
     bless_model(message)

@@ -35,7 +35,7 @@ class Twitter::Client
     id = id.to_i if id.is_a?(Twitter::User)
     id_param = id.is_a?(String) ? :screen_name : :user_id
     params = options.merge(id_param => id)
-    response = http_connect {|conn| create_http_get_request(@@USER_URIS[action], params) }
+    response = http_get_request(@@USER_URIS[action], params) 
     bless_models(Twitter::User.unmarshal(response.body))
   end
   
@@ -58,9 +58,15 @@ class Twitter::Client
   # * +:followers+
   def my(action, options = {})
     raise ArgumentError, "Invalid user action: #{action}" unless @@USER_URIS.keys.member?(action)
-    params = options.merge(:id => @login)
-    response = http_connect {|conn| create_http_get_request(@@USER_URIS[action], params) }
+    params = options.merge(:id => me.id)
+    response = http_get_request(@@USER_URIS[action], params) 
     users = Twitter::User.unmarshal(response.body)
     bless_models(users)
+  end
+
+  def me()
+    @me ||= Twitter::User.bless_as_me {
+      account_info(:verify_credentials)
+    }
   end
 end

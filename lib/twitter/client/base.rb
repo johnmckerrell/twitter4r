@@ -1,27 +1,8 @@
 class Twitter::Client
-  alias :old_inspect :inspect
-
-  def inspect
-    s = old_inspect
-    s.gsub!(/@password=".*?"/, '@password="XXXX"')
-  end
 
   protected
     attr_accessor :login, :password
     attr_accessor :oauth_token
-    
-    # Returns the response of the HTTP connection.  
-    def http_connect(body = nil, require_auth = true, service = :rest, &block)
-    	require_block(block_given?)
-    	connection = create_http_connection(service)
-    	connection.start do |connection|
-    		request = yield connection if block_given?
-    		request.basic_auth(@login, @password) if require_auth && !@login.nil? && !@password.nil?
-    		response = connection.request(request, body)
-    		handle_rest_response(response)
-    		response
-      end
-    end
     
     # "Blesses" model object with client information
     def bless_model(model)
@@ -50,29 +31,6 @@ class Twitter::Client
       end
     end
     
-    def create_http_connection(service = :rest)
-      case service
-      when :rest
-        protocol, host, port = @@config.protocol, @@config.host, @@config.port
-      when :search
-        protocol, host, port = @@config.search_protocol, @@config.search_host, @@config.search_port
-      end
-      conn = Net::HTTP.new(host, port, 
-                            @@config.proxy_host, @@config.proxy_port,
-                            @@config.proxy_user, @@config.proxy_pass)
-      if protocol == :ssl
-        conn.use_ssl = true
-        conn.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
-     
-      # Add timeout from config, if applicable.
-      if @@config.timeout
-        conn.read_timeout = @@config.timeout
-      end
-
-      conn
-    end
-
     def http_header
       # can cache this in class variable since all "variables" used to 
       # create the contents of the HTTP header are determined by other 
@@ -87,20 +45,6 @@ class Twitter::Client
       @@http_header
     end
     
-    def create_http_get_request(uri, params = {})
-    	path = (params.size > 0) ? "#{uri}?#{params.to_http_str}" : uri
-      Net::HTTP::Get.new(path, http_header)
-    end
-    
-    def create_http_post_request(uri)
-    	Net::HTTP::Post.new(uri, http_header)
-    end
-    
-    def create_http_delete_request(uri, params = {})
-    	path = (params.size > 0) ? "#{uri}?#{params.to_http_str}" : uri
-    	Net::HTTP::Delete.new(path, http_header)
-    end
-
     def http_request(method, path, body = {}, params = {}, service = :rest)
 
       response = nil
@@ -129,6 +73,7 @@ class Twitter::Client
         args = [method, url]
         args << body if [:post, :put].include?(method)
         args << http_header
+        puts url
         response = @oauth_token.send(*args)
       else
         # otherwise we can do a non-authenticated http request directly
@@ -148,7 +93,8 @@ class Twitter::Client
 
         path = "#{path}?#{query}" if query
 
-        request = Net::HTTP.const_get(method.to_s.capitalize).new(path, headers)
+        request = Net::HTTP.const_get(method.to_s.capitalize).new(path, http_header)
+    		request.basic_auth(@login, @password) if !@login.nil? && !@password.nil?
 
         if body.is_a?(Hash) && !body.blank?
           request.set_form_data(body)
@@ -159,6 +105,7 @@ class Twitter::Client
         response = conn.request(request)
       end
 
+      handle_rest_response(response)
       response
     end
 

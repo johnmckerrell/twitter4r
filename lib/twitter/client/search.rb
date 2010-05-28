@@ -20,7 +20,7 @@ class Twitter::Client
   def search(options = {})
 #    raise ArgumentError, "Invalid messaging action: #{action}"
     uri = @@SEARCH_URIS[:basic]
-    response = http_connect(nil, false, :search) {|conn|	create_http_get_request(uri, options) }
+    response = http_get_request(uri, options, :search)
     json = JSON.parse(response.body)
     bless_models(Twitter::Status.unmarshal(JSON.dump(json["results"])))
   end

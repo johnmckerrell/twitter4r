@@ -1,6 +1,12 @@
 class Twitter::Client
   @@ACCOUNT_URIS = {
     :rate_limit_status => '/account/rate_limit_status',
+    :verify_credentials => '/account/verify_credentials'
+  }
+  
+  @@RESPONSE_MODELS = {
+    :rate_limit_status => Twitter::RateLimitStatus,
+    :verify_credentials => Twitter::User
   }
   
   # Provides access to the Twitter rate limit status API.
@@ -13,12 +19,8 @@ class Twitter::Client
   #  account_status = client.account_info
   #  puts account_status.remaining_hits
   def account_info(type = :rate_limit_status)
-    connection = create_http_connection
-    connection.start do |connection|
-      response = http_connect do |conn|
-        create_http_get_request(@@ACCOUNT_URIS[type])
-      end
-      bless_models(Twitter::RateLimitStatus.unmarshal(response.body))
-    end
+      response = http_get_request(@@ACCOUNT_URIS[type])
+      bless_models(@@RESPONSE_MODELS[type].unmarshal(response.body))
   end
+
 end

@@ -50,7 +50,7 @@ module Twitter
   end
 
   class Client
-    @@defaults = { :host => 'twitter.com', 
+    @@defaults = { :host => 'api.twitter.com', 
                    :port => 443, 
                    :protocol => :ssl,
                    :search_host => 'search.twitter.com',

@@ -179,6 +179,14 @@ module Twitter
       def find(id, client)
         client.user(id)
       end
+
+      @@force_is_me = false
+      def bless_as_me(&block)
+        @@force_is_me = true
+        ret = yield
+        @@force_is_me = false
+        ret
+      end
     end
     
     # Override of ModelMixin#bless method.
@@ -191,11 +199,11 @@ module Twitter
     #  followers = user.followers if user.is_me?
     # Or:
     #  followers = user.followers if user.respond_to?(:followers)
-    def bless(client)
+    def bless(client, force_is_me = false)
       basic_bless(client)
       self.instance_eval(%{
       	self.class.send(:include, Twitter::AuthenticatedUserMixin)
-      }) if self.is_me? and not self.respond_to?(:followers)
+      }) if (@@force_is_me || self.is_me?) and not self.respond_to?(:followers)
       self
     end
     
@@ -212,7 +220,7 @@ module Twitter
       # Since this is an implementation detail we can leave this for 
       # subsequent 0.2.x releases.  It doesn't have to be decided before 
       # the 0.2.0 launch.
-      @screen_name == @client.instance_eval("@login")
+      @screen_name == @client.me.screen_name
     end
     
     # Returns an Array of user objects that represents the authenticated
