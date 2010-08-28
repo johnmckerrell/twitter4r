@@ -52,7 +52,7 @@ class Twitter::Client
 
       case service
       when :rest
-        protocol, host, port = @@config.protocol, @@config.host, @@config.port
+        protocol, host, port, api_version = @@config.protocol, @@config.host, @@config.port, @@config.api_version
       when :search
         protocol, host, port = @@config.search_protocol, @@config.search_host, @@config.search_port
       end
@@ -69,11 +69,14 @@ class Twitter::Client
           builder = URI::HTTP
         end
         
+        if api_version
+          path = "/#{api_version}#{path}"
+        end
         url = builder.build( :host => host, :port => port, :path => path, :query => query ).to_s
         args = [method, url]
         args << body if [:post, :put].include?(method)
         args << http_header
-        puts url
+        puts args.inspect
         response = @oauth_token.send(*args)
       else
         # otherwise we can do a non-authenticated http request directly
