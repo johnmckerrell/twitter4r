@@ -296,7 +296,7 @@ module Twitter
   # Represents a direct message on <tt>Twitter</tt> between <tt>Twitter</tt> users.
   class Message
     include ModelMixin
-    @@ATTRIBUTES = [:id, :recipient, :sender, :text, :created_at]
+    @@ATTRIBUTES = [:id, :recipient, :sender, :text, :created_at, :geo]
     attr_accessor *@@ATTRIBUTES
     
     class << self
