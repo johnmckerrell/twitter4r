@@ -31,10 +31,18 @@ class Twitter::Client
     value = value.to_i unless value.is_a?(String)
     uri = "#{@@FRIENDSHIP_URIS[action]}.json"
     params = {}
-    if value.is_a?(String)
-      params["target_screen_name"] = value
+    if action == :show
+      if value.is_a?(String)
+        params["target_screen_name"] = value
+      else
+        params["target_id"] = value
+      end
     else
-      params["target_id"] = value
+      if value.is_a?(String)
+        params["screen_name"] = value
+      else
+        params["user_id"] = value
+      end
     end
     if action == :show
       response = http_get_request(uri,params)
